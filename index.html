@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Бэкофис.Контакт.ИИ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__logo">Бэкофис.Контакт.ИИ</div>
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab is-active" role="tab" aria-selected="true" data-tab="clients">Список клиентов</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-tab="journal">Журнал действий</button>
+    </nav>
+    <div class="topbar__actions" aria-hidden="true">
+      <span class="icon-btn icon-btn--plain">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
+      </span>
+      <span class="icon-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/></svg>
+      </span>
+    </div>
+  </header>
+
+  <main class="page">
+    <section data-panel="clients">
+      <h1 class="page__title">Клиенты Контакт.АИ</h1>
+      <div class="search">
+        <svg class="search__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+        <input id="search" class="search__input" type="text" placeholder="Поиск по названию, номеру или ID" autocomplete="off" aria-label="Поиск клиентов">
+        <button id="search-clear" class="search__clear" type="button" aria-label="Очистить поиск" hidden>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="col-name">Название</th>
+              <th class="col-phone">Основной номер</th>
+              <th class="col-id">ID</th>
+              <th class="col-pbx">Наличие ОАТС</th>
+              <th>CRM S2</th>
+            </tr>
+          </thead>
+          <tbody id="clients-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section data-panel="journal" hidden>
+      <h1 class="page__title">Журнал действий</h1>
+      <p class="placeholder">Раздел в разработке</p>
+    </section>
+  </main>
+
+  <div id="overlay" class="overlay"></div>
+
+  <aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
+    <div class="drawer__head">
+      <h2 id="drawer-title" class="drawer__title">Подключение CRM S2</h2>
+      <button id="drawer-close" class="drawer__close" type="button" aria-label="Закрыть">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="drawer__body">
+      <dl class="info">
+        <div class="info__item"><dt>Клиент</dt><dd id="d-name"></dd></div>
+        <div class="info__item"><dt>ID</dt><dd id="d-id"></dd></div>
+        <div class="info__item">
+          <dt>
+            Основной номер
+            <span class="hint" tabindex="0" aria-describedby="phone-tip">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="7.75" r=".5" fill="currentColor"/></svg>
+              <span id="phone-tip" class="hint__tip" role="tooltip">Номер, на который зарегистрирован клиент в Контакт.ИИ. Он будет использоваться для входа в CRM S2 по Mobile ID.</span>
+            </span>
+          </dt>
+          <dd id="d-phone"></dd>
+        </div>
+      </dl>
+
+      <form id="connect-form" class="form" novalidate>
+        <div class="field-group">
+          <div class="select" id="tariff">
+            <button type="button" class="field select__trigger" id="tariff-trigger" aria-haspopup="listbox" aria-expanded="false">
+              <span class="field__label">Тарифный план</span>
+              <span class="select__value" id="tariff-value"></span>
+              <svg class="select__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <ul class="select__list" id="tariff-list" role="listbox" hidden></ul>
+          </div>
+          <p class="field__error" id="e-tariff"></p>
+        </div>
+
+        <div class="field-group">
+          <label class="field">
+            <input class="field__input" id="f-ban" type="text" inputmode="numeric" autocomplete="off" placeholder=" ">
+            <span class="field__label">BAN (балансовый счёт)</span>
+          </label>
+          <p class="field__error" id="e-ban"></p>
+        </div>
+
+        <div class="field-group">
+          <label class="field">
+            <input class="field__input" id="f-phone" type="text" inputmode="tel" autocomplete="off" placeholder=" ">
+            <span class="field__label">Тарификационный номер</span>
+          </label>
+          <p class="field__error" id="e-phone"></p>
+        </div>
+
+        <div class="field-group">
+          <label class="field">
+            <input class="field__input" id="f-email" type="text" inputmode="email" autocomplete="off" placeholder=" ">
+            <span class="field__label">Контактная почта</span>
+          </label>
+          <p class="field__error" id="e-email"></p>
+        </div>
+      </form>
+    </div>
+
+    <div class="drawer__foot">
+      <button type="button" id="drawer-cancel" class="btn btn--outline">Отменить</button>
+      <button type="submit" form="connect-form" id="drawer-submit" class="btn btn--primary" disabled>Подключить</button>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="logic.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

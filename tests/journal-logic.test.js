@@ -66,6 +66,15 @@ test('filter: action, source and employee query combine', () => {
   assert.deepEqual(run({ action: 'create', source: 's2' }), []);
 });
 
+test('paginate: slice bounds and clamping', () => {
+  assert.deepEqual(J.paginate(100, 1, 10), { page: 1, pages: 10, start: 0, end: 10 });
+  assert.deepEqual(J.paginate(23, 3, 10), { page: 3, pages: 3, start: 20, end: 23 });
+  assert.deepEqual(J.paginate(23, 9, 10), { page: 3, pages: 3, start: 20, end: 23 });
+  assert.deepEqual(J.paginate(23, 0, 10), { page: 1, pages: 3, start: 0, end: 10 });
+  assert.deepEqual(J.paginate(10, 1, 10), { page: 1, pages: 1, start: 0, end: 10 });
+  assert.deepEqual(J.paginate(0, 1, 10), { page: 1, pages: 1, start: 0, end: 0 });
+});
+
 test('month grid starts on Monday', () => {
   // 1 July 2022 is a Friday, 1 August 2022 is a Monday
   assert.deepEqual(J.monthGrid(2022, 6).slice(0, 6), [null, null, null, null, 1, 2]);

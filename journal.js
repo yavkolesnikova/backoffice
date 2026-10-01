@@ -4,6 +4,7 @@
   const J = window.JournalLogic;
   const ALL = { id: '', name: 'Все' };
   const DEFAULT_PRESET = 'last30';
+  const PAGER_MIN_ROWS = 10;
 
   const now = Date.now();
   const presets = J.presets(now);
@@ -21,6 +22,9 @@
     action: '',
     source: '',
     query: '',
+    page: 1,
+    pages: 1,
+    pageSize: 10,
     openSelect: null,
     picker: { open: false, tab: 'range', viewYear: 0, viewMonth: 0, start: null, end: null, timeFrom: '', timeTo: '', timeError: {} },
   };
@@ -53,8 +57,23 @@
 
   // Table
 
-  function renderTable() {
-    const rows = J.filterEvents(state.events, state);
+  function renderPager(total, pg) {
+    el('j-pager').hidden = total <= PAGER_MIN_ROWS;
+    el('j-page-info').textContent = `${pg.start + 1}-${pg.end} из ${total}`;
+    el('j-pager').querySelectorAll('[data-page]').forEach((button) => {
+      const back = button.dataset.page === 'first' || button.dataset.page === 'prev';
+      button.disabled = back ? pg.page === 1 : pg.page === pg.pages;
+    });
+  }
+
+  // Any filter change returns to page 1; only the pager itself keeps the page
+  function renderTable(keepPage) {
+    const found = J.filterEvents(state.events, state);
+    const pg = J.paginate(found.length, keepPage ? state.page : 1, state.pageSize);
+    state.page = pg.page;
+    state.pages = pg.pages;
+    renderPager(found.length, pg);
+    const rows = found.slice(pg.start, pg.end);
     const body = el('journal-body');
     if (!rows.length) {
       body.innerHTML = '<tr class="table__empty"><td colspan="4">Ничего не найдено'
@@ -317,6 +336,19 @@
 
   el('journal-body').addEventListener('click', (event) => {
     if (event.target.closest('[data-action="reset-filters"]')) resetFilters();
+  });
+
+  el('j-pager').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-page]');
+    if (!button || button.disabled) return;
+    const target = { first: 1, prev: state.page - 1, next: state.page + 1, last: state.pages }[button.dataset.page];
+    state.page = target;
+    renderTable(true);
+  });
+
+  el('j-page-size').addEventListener('change', (event) => {
+    state.pageSize = Number(event.target.value);
+    renderTable();
   });
 
   // composedPath keeps ancestors of nodes that a re-render has already detached

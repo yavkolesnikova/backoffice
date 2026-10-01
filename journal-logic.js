@@ -115,6 +115,14 @@
       && (!query || event.employee.toLowerCase().includes(query)));
   }
 
+  // start/end are slice bounds; an out-of-range page is clamped
+  function paginate(total, page, size) {
+    const pages = Math.max(1, Math.ceil(total / size));
+    const current = Math.min(Math.max(1, page), pages);
+    const start = (current - 1) * size;
+    return { page: current, pages, start, end: Math.min(start + size, total) };
+  }
+
   // Monday-first month cells: leading nulls, then day numbers
   function monthGrid(year, month) {
     const offset = (new Date(year, month, 1).getDay() + 6) % 7;
@@ -151,7 +159,7 @@
     ACTIONS, SOURCES, EMPLOYEES, MONTHS,
     startOfDay, endOfDay, addDays, addMonths,
     formatDate, formatTime, formatDateTime, formatRange,
-    presets, buildEvents, filterEvents,
+    presets, buildEvents, filterEvents, paginate,
     monthGrid, maskTime, parseTime, withTime,
   };
 

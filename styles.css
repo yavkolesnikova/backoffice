@@ -78,6 +78,32 @@ button { font: inherit; color: inherit; }
 .select__icon { position: absolute; right: 16px; top: 13px; color: var(--muted); }
 .table--journal th { width: 25%; }
 
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 40px;
+  height: 52px;
+  padding: 0 12px 0 16px;
+  border-top: 1px solid var(--line);
+}
+.pager__size { display: flex; align-items: center; gap: 8px; }
+.pager__select {
+  appearance: none;
+  padding: 4px 24px 4px 0;
+  border: 0;
+  outline: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%231f2024'/%3E%3C/svg%3E") no-repeat right 4px center;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.pager__select:focus-visible { outline: 1px solid var(--text); outline-offset: 2px; border-radius: 4px; }
+.pager__nav { display: flex; gap: 16px; }
+.pager__btn { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 8px; background: none; cursor: pointer; }
+.pager__btn:hover:not(:disabled) { background: var(--field); }
+.pager__btn:disabled { color: #b9bac0; cursor: default; }
+
 .picker {
   position: absolute;
   left: 0;

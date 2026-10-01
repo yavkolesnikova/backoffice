@@ -234,6 +234,7 @@ button { font: inherit; color: inherit; }
 }
 .badge--green { background: var(--green); }
 .badge--blue { background: var(--blue); }
+.badge--red { background: var(--red); }
 
 .link {
   display: inline-flex;

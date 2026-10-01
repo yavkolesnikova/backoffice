@@ -45,7 +45,7 @@
     const anchor = target.getBoundingClientRect();
     const box = tip.getBoundingClientRect();
     tip.style.left = Math.max(8, anchor.left + anchor.width / 2 - box.width / 2) + 'px';
-    tip.style.top = (anchor.top - box.height - 8) + 'px';
+    tip.style.top = (anchor.bottom + 8) + 'px';
   }
 
   function hideTip() {
@@ -68,7 +68,7 @@
       case 'connected':
         return '<span class="badge badge--green">Подключено</span>';
       case 'error':
-        return `<span class="badge badge--blue" tabindex="0" data-tip="${escapeHtml(CONNECT_ERROR)}">Ошибка подключения</span>` + (L.canRetry(client)
+        return `<span class="badge badge--red" tabindex="0" data-tip="${escapeHtml(CONNECT_ERROR)}">Ошибка подключения</span>` + (L.canRetry(client)
           ? `<button type="button" class="link" data-action="retry" data-id="${id}">${ICONS.retry}Повторить</button>`
           : '');
       default:

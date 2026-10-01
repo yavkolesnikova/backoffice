@@ -375,6 +375,24 @@ button { font: inherit; color: inherit; }
 .btn--primary { border: 1px solid transparent; background: var(--accent); }
 .btn--primary:disabled { background: var(--accent-soft); color: #a8a9ad; cursor: default; }
 
+.badge[data-tip] { cursor: help; }
+.tooltip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  max-width: 280px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--toast);
+  color: #fff;
+  font-size: 13px;
+  line-height: 18px;
+  pointer-events: none;
+  visibility: hidden;
+}
+.tooltip.is-visible { visibility: visible; }
+
 /* Toast */
 .toast {
   position: fixed;

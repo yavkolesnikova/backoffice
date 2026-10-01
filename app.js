@@ -36,7 +36,25 @@
     return state.clients.find((client) => client.id === id);
   }
 
+  // Tooltip: a fixed-position element, because table cells clip their overflow
+
+  function showTip(target) {
+    const tip = el('tooltip');
+    tip.textContent = target.dataset.tip;
+    tip.classList.add('is-visible');
+    const anchor = target.getBoundingClientRect();
+    const box = tip.getBoundingClientRect();
+    tip.style.left = Math.max(8, anchor.left + anchor.width / 2 - box.width / 2) + 'px';
+    tip.style.top = (anchor.top - box.height - 8) + 'px';
+  }
+
+  function hideTip() {
+    el('tooltip').classList.remove('is-visible');
+  }
+
   // Table
+
+  const CONNECT_ERROR = 'ER015 SOC allready present';
 
   function crmCell(client) {
     const id = escapeHtml(client.id);
@@ -50,7 +68,7 @@
       case 'connected':
         return '<span class="badge badge--green">Подключено</span>';
       case 'error':
-        return '<span class="badge badge--blue">Ошибка подключения</span>' + (L.canRetry(client)
+        return `<span class="badge badge--blue" tabindex="0" data-tip="${escapeHtml(CONNECT_ERROR)}">Ошибка подключения</span>` + (L.canRetry(client)
           ? `<button type="button" class="link" data-action="retry" data-id="${id}">${ICONS.retry}Повторить</button>`
           : '');
       default:
@@ -59,6 +77,7 @@
   }
 
   function renderTable() {
+    hideTip();
     const rows = L.filterClients(state.clients, state.query);
     const body = el('clients-body');
     if (!rows.length) {
@@ -225,8 +244,7 @@
 
   const PENDING_MS = 3000;
   const TOAST_MS = 4000;
-  const TOAST_SENT = 'Заявка на подключение CRM S2 успешно отправлена';
-  const TOAST_RESENT = 'Заявка на повторное подключение CRM S2 успешно отправлена';
+  const TOAST_SENT = 'Запрос на подключение CRM S2 отправлен';
   let toastTimer = null;
 
   function showToast(text) {
@@ -237,13 +255,13 @@
     toastTimer = setTimeout(() => toast.classList.remove('is-visible'), TOAST_MS);
   }
 
-  function startConnection(id, toastText) {
+  function startConnection(id) {
     const client = findClient(id);
     if (!client) return;
     client.crm = 'pending';
     client.attempts += 1;
     renderTable();
-    showToast(toastText);
+    showToast(TOAST_SENT);
     setTimeout(() => {
       client.crm = L.resolveOutcome(client);
       renderTable();
@@ -259,12 +277,12 @@
     if (!client || !L.canConnect(client)) return;
     client.request = { ...state.form };
     closeDrawer();
-    startConnection(client.id, TOAST_SENT);
+    startConnection(client.id);
   }
 
   function retryConnection(id) {
     const client = findClient(id);
-    if (client && L.canRetry(client)) startConnection(id, TOAST_RESENT);
+    if (client && L.canRetry(client)) startConnection(id);
   }
 
   // Actions
@@ -291,6 +309,12 @@
     const target = event.target.closest('[data-action]');
     if (target) handleAction(target.dataset.action, target.dataset.id);
   });
+
+  ['mouseover', 'focusin'].forEach((type) => el('clients-body').addEventListener(type, (event) => {
+    const target = event.target.closest('[data-tip]');
+    if (target) showTip(target);
+  }));
+  ['mouseout', 'focusout'].forEach((type) => el('clients-body').addEventListener(type, hideTip));
 
   const same = (value) => value;
   bindInput('f-ban', 'ban', (value) => L.onlyDigits(value).slice(0, 9), same);

@@ -167,6 +167,15 @@
     renderSelect();
   }
 
+  function setHintOpen(open) {
+    el('phone-hint').classList.toggle('is-open', open);
+    el('phone-hint').setAttribute('aria-expanded', String(open));
+  }
+
+  function isHintOpen() {
+    return el('phone-hint').classList.contains('is-open');
+  }
+
   function openDrawer(id) {
     const client = findClient(id);
     if (!client || !L.canConnect(client)) return;
@@ -191,6 +200,7 @@
   function closeDrawer() {
     state.drawerClientId = null;
     state.selectOpen = false;
+    setHintOpen(false);
     renderSelect();
     el('overlay').classList.remove('is-open');
     el('drawer').classList.remove('is-open');
@@ -309,11 +319,14 @@
 
   document.addEventListener('click', (event) => {
     if (state.selectOpen && !event.target.closest('#tariff')) closeSelect();
+    if (event.target.closest('#phone-hint')) setHintOpen(!isHintOpen());
+    else setHintOpen(false);
   });
 
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
-    if (state.selectOpen) closeSelect();
+    if (isHintOpen()) setHintOpen(false);
+    else if (state.selectOpen) closeSelect();
     else if (state.drawerClientId) closeDrawer();
   });
 

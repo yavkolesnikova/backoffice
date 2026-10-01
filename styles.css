@@ -171,7 +171,8 @@ button { font: inherit; color: inherit; }
 .info dt { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
 .info dd { margin: 0; font-size: 16px; line-height: 22px; overflow-wrap: anywhere; }
 
-.hint { display: inline-grid; color: var(--muted); cursor: help; outline: 0; }
+.hint { display: inline-grid; padding: 0; border: 0; background: none; color: var(--muted); text-align: left; cursor: pointer; }
+.hint:hover, .hint.is-open { color: var(--text); }
 /* Anchored to .info__item, not the icon: stays inside the drawer width */
 .hint__tip {
   position: absolute;
@@ -189,7 +190,7 @@ button { font: inherit; color: inherit; }
   visibility: hidden;
   transition: opacity .12s, visibility .12s;
 }
-.hint:hover .hint__tip, .hint:focus .hint__tip { opacity: 1; visibility: visible; }
+.hint.is-open .hint__tip { opacity: 1; visibility: visible; }
 
 /* Form */
 .field-group { margin-bottom: 20px; }

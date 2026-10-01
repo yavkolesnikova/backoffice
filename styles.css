@@ -104,7 +104,8 @@ button { font: inherit; color: inherit; }
 .table th { font-weight: 600; }
 .table tbody tr { border-top: 1px solid var(--line); }
 .table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.col-name, .col-phone, .col-pbx { width: 173px; }
+.col-name { width: 210px; }
+.col-phone, .col-pbx { width: 173px; }
 .col-id { width: 360px; }
 .table__empty td { height: 120px; text-align: center; color: var(--muted); }
 .table__empty .link { margin-left: 8px; }
@@ -165,17 +166,19 @@ button { font: inherit; color: inherit; }
 .drawer__foot { display: flex; gap: 16px; padding: 16px 24px 24px; border-top: 1px solid var(--line); }
 
 .info { margin: 0 0 24px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.info__item { position: relative; }
 .info__item + .info__item { margin-top: 20px; }
 .info dt { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
 .info dd { margin: 0; font-size: 16px; line-height: 22px; overflow-wrap: anywhere; }
 
-.hint { position: relative; display: inline-grid; color: var(--muted); cursor: help; outline: 0; }
+.hint { display: inline-grid; color: var(--muted); cursor: help; outline: 0; }
+/* Anchored to .info__item, not the icon: stays inside the drawer width */
 .hint__tip {
   position: absolute;
   top: calc(100% + 8px);
-  right: -60px;
+  left: 0;
+  right: 0;
   z-index: 2;
-  width: 240px;
   padding: 8px 12px;
   border-radius: 8px;
   background: var(--toast);

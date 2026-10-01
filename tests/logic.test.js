@@ -4,15 +4,15 @@ const L = require('../logic.js');
 
 const names = (query) => L.filterClients(L.CLIENTS, query).map((c) => c.name);
 
-test('mock data: five clients with unique ids and phones', () => {
-  assert.equal(L.CLIENTS.length, 5);
-  assert.equal(new Set(L.CLIENTS.map((c) => c.id)).size, 5);
-  assert.equal(new Set(L.CLIENTS.map((c) => c.phone)).size, 5);
+test('mock data: eight clients with unique ids and phones', () => {
+  assert.equal(L.CLIENTS.length, 8);
+  assert.equal(new Set(L.CLIENTS.map((c) => c.id)).size, 8);
+  assert.equal(new Set(L.CLIENTS.map((c) => c.phone)).size, 8);
 });
 
 test('search: empty and whitespace-only query returns everyone', () => {
-  assert.equal(names('').length, 5);
-  assert.equal(names('   ').length, 5);
+  assert.equal(names('').length, 8);
+  assert.equal(names('   ').length, 8);
 });
 
 test('search: by name ignores case, quotes, extra spaces and yo', () => {
@@ -20,7 +20,9 @@ test('search: by name ignores case, quotes, extra spaces and yo', () => {
   assert.deepEqual(names('ООО  ромашка'), ['ООО "Ромашка"']);
   assert.deepEqual(names('"Ромашка"'), ['ООО "Ромашка"']);
   assert.deepEqual(names('звёзда'), ['ООО "Звезда"']);
-  assert.equal(names('ооо').length, 5);
+  assert.deepEqual(names('теплый дом'), ['ООО "Тёплый дом"']);
+  assert.deepEqual(names('соколова'), ['ИП Соколова А. В.']);
+  assert.equal(names('ооо').length, 6);
 });
 
 test('search: query of quotes only returns nothing', () => {
@@ -28,21 +30,21 @@ test('search: query of quotes only returns nothing', () => {
 });
 
 test('search: by phone in any format', () => {
-  assert.deepEqual(names('9066442895'), ['ООО "Звезда"']);
-  assert.deepEqual(names('906 644-28-95'), ['ООО "Звезда"']);
-  assert.deepEqual(names('+7 (906) 644-28-95'), ['ООО "Звезда"']);
-  assert.deepEqual(names('89066442895'), ['ООО "Звезда"']);
-  assert.deepEqual(names('28-98'), ['ООО "Вектор"']);
+  assert.deepEqual(names('9629053471'), ['ООО "Звезда"']);
+  assert.deepEqual(names('962 905-34-71'), ['ООО "Звезда"']);
+  assert.deepEqual(names('+7 (962) 905-34-71'), ['ООО "Звезда"']);
+  assert.deepEqual(names('89629053471'), ['ООО "Звезда"']);
+  assert.deepEqual(names('39-15'), ['ООО "Вектор"']);
 });
 
 test('search: by id fragment, case-insensitive', () => {
-  assert.deepEqual(names('bb77cc'), ['ООО "Вектор"']);
-  assert.deepEqual(names('BB77CC'), ['ООО "Вектор"']);
-  assert.equal(names('3f2a1c90').length, 5);
+  assert.deepEqual(names('8d5013'), ['ООО "Вектор"']);
+  assert.deepEqual(names('8D5013'), ['ООО "Вектор"']);
+  assert.deepEqual(names('72d6c1f9-0e58'), ['ООО "Вектор"']);
 });
 
 test('search: mixed letter-digit query does not match via phone digits', () => {
-  // 'a2' occurs in every id ('11aa22'), so use fragments absent from ids
+  // ids are hex, so fragments with z/q can only match through phone digits
   assert.deepEqual(names('z6'), []);
   assert.deepEqual(names('q906'), []);
 });
@@ -96,6 +98,9 @@ test('availability: actions only for clients without PBX', () => {
   assert.equal(L.canConnect(by('Корытце')), false);
   assert.equal(L.canConnect(by('Ромашка')), false);
   assert.equal(L.canConnect(by('Коврики')), false);
+  assert.equal(L.canConnect(by('Северный берег')), true);
+  assert.equal(L.canConnect(by('Соколова')), false);
+  assert.equal(L.canConnect(by('Тёплый дом')), false);
   assert.equal(L.canConnect({ hasPbx: true, crm: 'available' }), false);
   assert.equal(L.canRetry({ hasPbx: false, crm: 'error' }), true);
   assert.equal(L.canRetry({ hasPbx: true, crm: 'error' }), false);

@@ -2,11 +2,14 @@
   'use strict';
 
   const CLIENTS = [
-    { id: '3f2a1c90-8b1e-4f6a-9c2d-11aa22bb33cc', name: 'ООО "Ромашка"', phone: '9066442894', hasPbx: true, crm: 'connected', outcome: null },
-    { id: '3f2a1c90-8b1e-4f6a-9c2d-11aa22bb44cc', name: 'ООО "Корытце"', phone: '9066442896', hasPbx: true, crm: 'none', outcome: null },
-    { id: '3f2a1c90-8b1e-4f6a-9c2d-11aa22bb55cc', name: 'ООО "Звезда"', phone: '9066442895', hasPbx: false, crm: 'available', outcome: 'success' },
-    { id: '3f2a1c90-8b1e-4f6a-9c2d-11aa22bb66cc', name: 'ООО "Коврики"', phone: '9066442897', hasPbx: false, crm: 'connected', outcome: null },
-    { id: '3f2a1c90-8b1e-4f6a-9c2d-11aa22bb77cc', name: 'ООО "Вектор"', phone: '9066442898', hasPbx: false, crm: 'available', outcome: 'fail-first' },
+    { id: 'a81f3c52-7d0e-4b9a-8c16-5e2f9d1b4a70', name: 'ООО "Ромашка"', phone: '9035174208', hasPbx: true, crm: 'connected', outcome: null },
+    { id: '0c7de914-2b6a-4f83-9a51-d3e8b6f0c217', name: 'ООО "Корытце"', phone: '9054418830', hasPbx: true, crm: 'none', outcome: null },
+    { id: '5b9e2f6d-41c8-4d37-b0a2-8f61c3e7d954', name: 'ООО "Звезда"', phone: '9629053471', hasPbx: false, crm: 'available', outcome: 'success' },
+    { id: 'e3470ab8-96f1-4c25-8d7b-1a5c0f92e6b3', name: 'ООО "Коврики"', phone: '9091286650', hasPbx: false, crm: 'connected', outcome: null },
+    { id: '72d6c1f9-0e58-43ab-b4c7-6f9a2e8d5013', name: 'ООО "Вектор"', phone: '9647703915', hasPbx: false, crm: 'available', outcome: 'fail-first' },
+    { id: '9f04b7e3-5a2d-4e61-a8c9-37d1f6b0e842', name: 'ИП Соколова А. В.', phone: '9037764120', hasPbx: true, crm: 'connected', outcome: null },
+    { id: '1d8a6e40-c3f7-4b92-95e0-b7248ac6f319', name: 'АО "Северный берег"', phone: '9605521347', hasPbx: false, crm: 'available', outcome: 'success' },
+    { id: 'c65b2d97-f8e1-4a03-b6d4-0e9c7135a28f', name: 'ООО "Тёплый дом"', phone: '9683309172', hasPbx: true, crm: 'none', outcome: null },
   ];
 
   const TARIFFS = [

@@ -11,16 +11,17 @@
 
   const SELECTS = {
     action: { rootId: 'j-action', options: [ALL].concat(J.ACTIONS) },
-    source: { rootId: 'j-source', options: [ALL].concat(J.SOURCES) },
   };
 
   const state = {
-    events: J.buildEvents(now, window.Logic.CLIENTS.map((client) => client.id)),
+    // Only clients with the service already connected have an account
+    events: J.buildEvents(now, window.Logic.CLIENTS
+      .filter((client) => client.crm === 'connected')
+      .map((client) => client.id)),
     from: 0,
     to: 0,
     presetId: null,
     action: '',
-    source: '',
     query: '',
     page: 1,
     pages: 1,
@@ -266,7 +267,6 @@
   function resetFilters() {
     applyPreset(DEFAULT_PRESET);
     state.action = '';
-    state.source = '';
     state.query = '';
     el('j-search').value = '';
     renderFilters();

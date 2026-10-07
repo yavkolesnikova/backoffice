@@ -2,13 +2,8 @@
   'use strict';
 
   const ACTIONS = [
-    { id: 'create', name: 'Создание УЗ билайнСРМ', source: 'backoffice' },
-    { id: 'login', name: 'Вход в кабинет билайнСРМ', source: 's2' },
-  ];
-
-  const SOURCES = [
-    { id: 'backoffice', name: 'Бэкофис' },
-    { id: 's2', name: 'билайнСРМ' },
+    { id: 'create', name: 'Создание УЗ билайнСРМ' },
+    { id: 'login', name: 'Вход в кабинет билайнСРМ' },
   ];
 
   const EMPLOYEES = ['ivanov', 'petrov', 'sidorova', 'kuznetsov', 'smirnova', 'volkov', 'morozova'];
@@ -82,8 +77,13 @@
     ];
   }
 
-  // Deterministic mock events over the year before `now`, denser towards `now`.
-  // Account creation refers to a client from `clientIds`; logins have no client.
+  // Deterministic mock events, `count` in total (90 by default).
+  // Logins span the year before `now`, denser towards `now`, and have no client.
+  // An account is created once per client: each of `clientIds` gets exactly one
+  // creation event, slotted between the newest logins every few rows, so the
+  // first page of the default view shows both kinds.
+  const CREATE_EVERY = 2;
+
   function buildEvents(now, clientIds, count) {
     const ids = clientIds || [];
     let seed = 20260921;
@@ -92,22 +92,34 @@
       return seed / 4294967296;
     };
     const yearMinutes = 365 * 24 * 60;
-    const events = [];
-    for (let i = 0; i < (count || 90); i += 1) {
+    const employee = () => EMPLOYEES[Math.floor(rand() * EMPLOYEES.length)];
+
+    const logins = [];
+    for (let i = 0; i < (count || 90) - ids.length; i += 1) {
       const r = rand();
       const minutesAgo = Math.floor(r * r * yearMinutes);
-      const action = ACTIONS[rand() < 0.45 ? 0 : 1];
-      const client = ids[Math.floor(rand() * ids.length)];
-      events.push({
-        id: i + 1,
-        employee: EMPLOYEES[Math.floor(rand() * EMPLOYEES.length)],
+      logins.push({
+        employee: employee(),
         time: now - minutesAgo * 60000 - Math.floor(rand() * 60000),
-        action: action.id,
-        source: action.source,
-        clientId: action.id === 'create' && client ? client : null,
+        action: 'login',
+        clientId: null,
       });
     }
-    return events.sort((a, b) => b.time - a.time);
+    logins.sort((a, b) => b.time - a.time);
+
+    // The j-th creation goes between logins k and k + 1, halfway in time
+    const creations = ids.map((clientId, j) => {
+      const k = Math.min(CREATE_EVERY * j + 1, logins.length - 1);
+      const after = logins[k];
+      const before = logins[k + 1];
+      let time = now - j * 60000;
+      if (after) time = before ? Math.round((after.time + before.time) / 2) : after.time - 60000;
+      return { employee: employee(), time, action: 'create', clientId };
+    });
+
+    return logins.concat(creations)
+      .sort((a, b) => b.time - a.time)
+      .map((event, index) => ({ id: index + 1, ...event }));
   }
 
   function filterEvents(events, filters) {
@@ -115,8 +127,8 @@
     return events.filter((event) => event.time >= filters.from
       && event.time <= filters.to
       && (!filters.action || event.action === filters.action)
-      && (!filters.source || event.source === filters.source)
-      && (!query || event.employee.toLowerCase().includes(query)));
+      && (!query || event.employee.toLowerCase().includes(query)
+        || String(event.clientId || '').toLowerCase().includes(query)));
   }
 
   // start/end are slice bounds; an out-of-range page is clamped
@@ -160,7 +172,7 @@
   }
 
   const api = {
-    ACTIONS, SOURCES, EMPLOYEES, MONTHS,
+    ACTIONS, EMPLOYEES, MONTHS,
     startOfDay, endOfDay, addDays, addMonths,
     formatDate, formatTime, formatDateTime, formatRange,
     presets, buildEvents, filterEvents, paginate,

@@ -41,37 +41,49 @@ test('mock events: deterministic, newest first, within the last year', () => {
   assert.deepEqual(events, J.buildEvents(NOW));
   for (let i = 1; i < events.length; i += 1) assert.ok(events[i - 1].time >= events[i].time);
   assert.ok(events.every((e) => e.time <= NOW && e.time > J.addDays(NOW, -366)));
-  assert.ok(events.every((e) => J.ACTIONS.find((a) => a.id === e.action).source === e.source));
 });
 
-test('mock events: account creation names a client, login does not', () => {
+test('mock events: exactly one account creation per client, logins have no client', () => {
   const ids = ['a1', 'b2', 'c3'];
   const events = J.buildEvents(NOW, ids);
-  assert.ok(events.some((e) => e.action === 'create'));
-  assert.ok(events.every((e) => (e.action === 'create' ? ids.includes(e.clientId) : e.clientId === null)));
-  assert.ok(J.buildEvents(NOW).every((e) => e.clientId === null));
+  const created = events.filter((e) => e.action === 'create').map((e) => e.clientId);
+  assert.deepEqual(created.slice().sort(), ids);
+  assert.ok(events.filter((e) => e.action === 'login').every((e) => e.clientId === null));
+  assert.equal(events.length, 90);
+  assert.ok(J.buildEvents(NOW).every((e) => e.action === 'login' && e.clientId === null));
 });
 
 test('filter: range bounds are inclusive', () => {
-  const events = [{ time: 100, employee: 'ivanov', action: 'create', source: 'backoffice' }];
+  const events = [{ time: 100, employee: 'ivanov', action: 'create' }];
   assert.equal(J.filterEvents(events, { from: 100, to: 100 }).length, 1);
   assert.equal(J.filterEvents(events, { from: 101, to: 200 }).length, 0);
   assert.equal(J.filterEvents(events, { from: 0, to: 99 }).length, 0);
 });
 
-test('filter: action, source and employee query combine', () => {
+test('filter: action and employee query combine', () => {
   const events = [
-    { time: 1, employee: 'ivanov', action: 'create', source: 'backoffice' },
-    { time: 2, employee: 'petrov', action: 'login', source: 's2' },
-    { time: 3, employee: 'Ivanova', action: 'login', source: 's2' },
+    { time: 1, employee: 'ivanov', action: 'create' },
+    { time: 2, employee: 'petrov', action: 'login' },
+    { time: 3, employee: 'Ivanova', action: 'login' },
   ];
   const run = (filters) => J.filterEvents(events, { from: 0, to: 10, ...filters }).map((e) => e.time);
   assert.deepEqual(run({}), [1, 2, 3]);
   assert.deepEqual(run({ action: 'login' }), [2, 3]);
-  assert.deepEqual(run({ source: 'backoffice' }), [1]);
   assert.deepEqual(run({ query: '  IVAN ' }), [1, 3]);
   assert.deepEqual(run({ query: 'ivan', action: 'login' }), [3]);
-  assert.deepEqual(run({ action: 'create', source: 's2' }), []);
+  assert.deepEqual(run({ query: 'petrov', action: 'create' }), []);
+});
+
+test('filter: query also finds the client id, case-insensitive', () => {
+  const events = [
+    { time: 1, employee: 'ivanov', action: 'create', clientId: '72d6c1f9-0e58' },
+    { time: 2, employee: 'petrov', action: 'login', clientId: null },
+  ];
+  const run = (query) => J.filterEvents(events, { from: 0, to: 10, query }).map((e) => e.time);
+  assert.deepEqual(run('0E58'), [1]);
+  assert.deepEqual(run('72d6c1f9-0e58'), [1]);
+  assert.deepEqual(run('petrov'), [2]);
+  assert.deepEqual(run('null'), []);
 });
 
 test('paginate: slice bounds and clamping', () => {

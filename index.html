@@ -31,7 +31,7 @@
       <h1 class="page__title">Список клиентов</h1>
       <div class="search">
         <svg class="search__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-        <input id="search" class="search__input" type="text" placeholder="Поиск по названию, номеру или ID" autocomplete="off" aria-label="Поиск клиентов">
+        <input id="search" class="search__input" type="text" placeholder="Поиск по номеру пользователя, названию или ID клиента" autocomplete="off" aria-label="Поиск клиентов">
         <button id="search-clear" class="search__clear" type="button" aria-label="Очистить поиск" hidden>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
         </button>
@@ -44,7 +44,7 @@
               <th class="col-phone">Основной номер</th>
               <th class="col-id">ID</th>
               <th class="col-pbx">Наличие ОАТС</th>
-              <th>CRM S2</th>
+              <th>билайнСРМ</th>
             </tr>
           </thead>
           <tbody id="clients-body"></tbody>
@@ -97,7 +97,7 @@
               <th>Сотрудник</th>
               <th>Время события</th>
               <th>Действие</th>
-              <th>Источник</th>
+              <th class="col-client">ID клиента</th>
             </tr>
           </thead>
           <tbody id="journal-body"></tbody>
@@ -135,7 +135,7 @@
 
   <aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
     <div class="drawer__head">
-      <h2 id="drawer-title" class="drawer__title">Подключение CRM S2</h2>
+      <h2 id="drawer-title" class="drawer__title">Подключение билайнСРМ</h2>
       <button id="drawer-close" class="drawer__close" type="button" aria-label="Закрыть">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
       </button>
@@ -145,16 +145,7 @@
       <dl class="info">
         <div class="info__item"><dt>Клиент</dt><dd id="d-name"></dd></div>
         <div class="info__item"><dt>ID</dt><dd id="d-id"></dd></div>
-        <div class="info__item">
-          <dt>
-            Основной номер
-            <button type="button" id="phone-hint" class="hint" aria-label="Подсказка об основном номере" aria-expanded="false" aria-describedby="phone-tip">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="7.75" r=".5" fill="currentColor"/></svg>
-              <span id="phone-tip" class="hint__tip" role="tooltip">Номер, на который зарегистрирован клиент в Контакт.ИИ. Он будет использоваться для входа в CRM S2 по Mobile ID.</span>
-            </button>
-          </dt>
-          <dd id="d-phone"></dd>
-        </div>
+        <div class="info__item"><dt>Основной номер</dt><dd id="d-phone"></dd></div>
       </dl>
 
       <form id="connect-form" class="form" novalidate>
@@ -189,9 +180,17 @@
         <div class="field-group">
           <label class="field">
             <input class="field__input" id="f-email" type="text" inputmode="email" autocomplete="off" placeholder=" ">
-            <span class="field__label">Контактная почта</span>
+            <span class="field__label">Почта администратора</span>
           </label>
           <p class="field__error" id="e-email"></p>
+        </div>
+
+        <div class="field-group">
+          <label class="field">
+            <input class="field__input" id="f-login" type="text" maxlength="255" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder=" ">
+            <span class="field__label">Логин администратора</span>
+          </label>
+          <p class="field__error" id="e-login"></p>
         </div>
       </form>
     </div>

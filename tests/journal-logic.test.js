@@ -44,6 +44,14 @@ test('mock events: deterministic, newest first, within the last year', () => {
   assert.ok(events.every((e) => J.ACTIONS.find((a) => a.id === e.action).source === e.source));
 });
 
+test('mock events: account creation names a client, login does not', () => {
+  const ids = ['a1', 'b2', 'c3'];
+  const events = J.buildEvents(NOW, ids);
+  assert.ok(events.some((e) => e.action === 'create'));
+  assert.ok(events.every((e) => (e.action === 'create' ? ids.includes(e.clientId) : e.clientId === null)));
+  assert.ok(J.buildEvents(NOW).every((e) => e.clientId === null));
+});
+
 test('filter: range bounds are inclusive', () => {
   const events = [{ time: 100, employee: 'ivanov', action: 'create', source: 'backoffice' }];
   assert.equal(J.filterEvents(events, { from: 100, to: 100 }).length, 1);

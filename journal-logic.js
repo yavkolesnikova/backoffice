@@ -2,13 +2,13 @@
   'use strict';
 
   const ACTIONS = [
-    { id: 'create', name: 'Создание УЗ S2', source: 'backoffice' },
-    { id: 'login', name: 'Вход в кабинет S2', source: 's2' },
+    { id: 'create', name: 'Создание УЗ билайнСРМ', source: 'backoffice' },
+    { id: 'login', name: 'Вход в кабинет билайнСРМ', source: 's2' },
   ];
 
   const SOURCES = [
     { id: 'backoffice', name: 'Бэкофис' },
-    { id: 's2', name: 'S2' },
+    { id: 's2', name: 'билайнСРМ' },
   ];
 
   const EMPLOYEES = ['ivanov', 'petrov', 'sidorova', 'kuznetsov', 'smirnova', 'volkov', 'morozova'];
@@ -82,8 +82,10 @@
     ];
   }
 
-  // Deterministic mock events over the year before `now`, denser towards `now`
-  function buildEvents(now, count) {
+  // Deterministic mock events over the year before `now`, denser towards `now`.
+  // Account creation refers to a client from `clientIds`; logins have no client.
+  function buildEvents(now, clientIds, count) {
+    const ids = clientIds || [];
     let seed = 20260921;
     const rand = () => {
       seed = (seed * 1664525 + 1013904223) % 4294967296;
@@ -95,12 +97,14 @@
       const r = rand();
       const minutesAgo = Math.floor(r * r * yearMinutes);
       const action = ACTIONS[rand() < 0.45 ? 0 : 1];
+      const client = ids[Math.floor(rand() * ids.length)];
       events.push({
         id: i + 1,
         employee: EMPLOYEES[Math.floor(rand() * EMPLOYEES.length)],
         time: now - minutesAgo * 60000 - Math.floor(rand() * 60000),
         action: action.id,
         source: action.source,
+        clientId: action.id === 'create' && client ? client : null,
       });
     }
     return events.sort((a, b) => b.time - a.time);

@@ -4,7 +4,7 @@
   const L = window.Logic;
 
   function emptyForm() {
-    return { tariff: '', ban: '', phone: '', email: '' };
+    return { tariff: '', ban: '', phone: '', email: '', login: '' };
   }
 
   const state = {
@@ -15,12 +15,16 @@
     touched: {},
     selectOpen: false,
     selectActive: 0,
+    expanded: new Set(),
   };
+
+  const USERS_TITLE = 'Список пользователей';
 
   const ICONS = {
     check: '<svg class="pbx" width="24" height="24" viewBox="0 0 24 24" aria-label="Есть"><circle cx="12" cy="12" r="12" fill="#2aa84f"/><path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     cross: '<svg class="pbx" width="24" height="24" viewBox="0 0 24 24" aria-label="Нет"><circle cx="12" cy="12" r="12" fill="#f4504a"/><path d="m8.5 8.5 7 7m0-7-7 7" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>',
     retry: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4h-4"/></svg>',
+    chevron: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
   };
 
   function el(id) {
@@ -76,6 +80,47 @@
     }
   }
 
+  // Escapes text and wraps the [start, end) ranges in <mark>
+  function marked(text, ranges) {
+    const sorted = ranges.slice().sort((a, b) => a[0] - b[0]);
+    let out = '';
+    let from = 0;
+    sorted.forEach(([start, end]) => {
+      if (start < from) return;
+      out += escapeHtml(text.slice(from, start)) + '<mark>' + escapeHtml(text.slice(start, end)) + '</mark>';
+      from = end;
+    });
+    return out + escapeHtml(text.slice(from));
+  }
+
+  function recordCells(record, fields) {
+    const hl = L.highlights(record, state.query, fields);
+    return {
+      name: marked(record.name, hl.name),
+      phone: marked(L.formatPhone(record.phone), hl.phone),
+      id: marked(record.id, hl.id),
+    };
+  }
+
+  // The main number belongs to the first user, so a phone match is highlighted on the client row too
+  const CLIENT_ROW_FIELDS = L.CLIENT_FIELDS.concat(L.USER_FIELDS);
+
+  function usersRow(client) {
+    const rows = client.users.map((user) => {
+      const cells = recordCells(user, L.USER_FIELDS);
+      return `<tr><td>${cells.name}</td><td>${cells.phone}</td><td>${cells.id}</td></tr>`;
+    }).join('');
+    return `<tr class="users-row"><td colspan="5"><div class="users">
+      <h2 class="users__title">${escapeHtml(USERS_TITLE)}</h2>
+      <div class="table-wrap">
+        <table class="table table--users">
+          <thead><tr><th>ФИО пользователя</th><th>Номер телефона</th><th>ID</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div></td></tr>`;
+  }
+
   function renderTable() {
     hideTip();
     const rows = L.filterClients(state.clients, state.query);
@@ -85,20 +130,39 @@
         + '<button type="button" class="link" data-action="reset-search">Сбросить поиск</button></td></tr>';
       return;
     }
-    body.innerHTML = rows.map((client) => `<tr>
-      <td>${escapeHtml(client.name)}</td>
-      <td>${escapeHtml(L.formatPhone(client.phone))}</td>
-      <td>${escapeHtml(client.id)}</td>
-      <td>${client.hasPbx ? ICONS.check : ICONS.cross}</td>
-      <td><div class="crm">${crmCell(client)}</div></td>
-    </tr>`).join('');
+    body.innerHTML = rows.map((client) => {
+      const open = state.expanded.has(client.id);
+      const cells = recordCells(client, CLIENT_ROW_FIELDS);
+      const id = escapeHtml(client.id);
+      return `<tr class="org-row${open ? ' is-expanded' : ''}" data-org="${id}">
+        <td><div class="org-name">
+          <button type="button" class="expander" data-action="toggle" data-id="${id}" aria-expanded="${open}"
+            aria-label="${open ? 'Скрыть' : 'Показать'} пользователей клиента">${ICONS.chevron}</button>
+          <span class="org-name__text">${cells.name}</span>
+        </div></td>
+        <td>${cells.phone}</td>
+        <td>${cells.id}</td>
+        <td>${client.hasPbx ? ICONS.check : ICONS.cross}</td>
+        <td><div class="crm">${crmCell(client)}</div></td>
+      </tr>` + (open ? usersRow(client) : '');
+    }).join('');
+  }
+
+  function toggleRow(id) {
+    if (state.expanded.has(id)) state.expanded.delete(id);
+    else state.expanded.add(id);
+    renderTable();
   }
 
   // Search
 
+  // Clients found through a user's phone open up, so the matching person is visible
   function setQuery(value) {
     state.query = value;
     el('search-clear').hidden = !value;
+    state.expanded = new Set(state.clients
+      .filter((client) => L.matchedUsers(client, value).length > 0)
+      .map((client) => client.id));
     renderTable();
   }
 
@@ -123,7 +187,7 @@
 
   // Connection panel
 
-  const FIELDS = ['tariff', 'ban', 'phone', 'email'];
+  const FIELDS = ['tariff', 'ban', 'phone', 'email', 'login'];
 
   function renderForm() {
     const errors = L.validateForm(state.form);
@@ -186,15 +250,6 @@
     renderSelect();
   }
 
-  function setHintOpen(open) {
-    el('phone-hint').classList.toggle('is-open', open);
-    el('phone-hint').setAttribute('aria-expanded', String(open));
-  }
-
-  function isHintOpen() {
-    return el('phone-hint').classList.contains('is-open');
-  }
-
   function openDrawer(id) {
     const client = findClient(id);
     if (!client || !L.canConnect(client)) return;
@@ -208,6 +263,7 @@
     el('f-ban').value = '';
     el('f-phone').value = '';
     el('f-email').value = '';
+    el('f-login').value = '';
     renderSelect();
     renderForm();
     el('overlay').classList.add('is-open');
@@ -219,7 +275,6 @@
   function closeDrawer() {
     state.drawerClientId = null;
     state.selectOpen = false;
-    setHintOpen(false);
     renderSelect();
     el('overlay').classList.remove('is-open');
     el('drawer').classList.remove('is-open');
@@ -244,7 +299,7 @@
 
   const PENDING_MS = 3000;
   const TOAST_MS = 4000;
-  const TOAST_SENT = 'Запрос на подключение CRM S2 отправлен';
+  const TOAST_SENT = 'Запрос на подключение билайнСРМ отправлен';
   let toastTimer = null;
 
   function showToast(text) {
@@ -292,6 +347,7 @@
       case 'reset-search': resetSearch(); break;
       case 'connect': openDrawer(id); break;
       case 'retry': retryConnection(id); break;
+      case 'toggle': toggleRow(id); break;
     }
   }
 
@@ -307,7 +363,13 @@
 
   el('clients-body').addEventListener('click', (event) => {
     const target = event.target.closest('[data-action]');
-    if (target) handleAction(target.dataset.action, target.dataset.id);
+    if (target) {
+      handleAction(target.dataset.action, target.dataset.id);
+      return;
+    }
+    // A click anywhere else on the organisation row also expands it
+    const row = event.target.closest('.org-row');
+    if (row) toggleRow(row.dataset.org);
   });
 
   ['mouseover', 'focusin'].forEach((type) => el('clients-body').addEventListener(type, (event) => {
@@ -320,6 +382,7 @@
   bindInput('f-ban', 'ban', (value) => L.onlyDigits(value).slice(0, 9), same);
   bindInput('f-phone', 'phone', L.normalizePhoneDigits, L.formatPhone);
   bindInput('f-email', 'email', same, same);
+  bindInput('f-login', 'login', same, same);
 
   el('tariff-trigger').addEventListener('click', () => {
     if (state.selectOpen) closeSelect(); else openSelect();
@@ -343,14 +406,11 @@
 
   document.addEventListener('click', (event) => {
     if (state.selectOpen && !event.target.closest('#tariff')) closeSelect();
-    if (event.target.closest('#phone-hint')) setHintOpen(!isHintOpen());
-    else setHintOpen(false);
   });
 
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
-    if (isHintOpen()) setHintOpen(false);
-    else if (state.selectOpen) closeSelect();
+    if (state.selectOpen) closeSelect();
     else if (state.drawerClientId) closeDrawer();
   });
 

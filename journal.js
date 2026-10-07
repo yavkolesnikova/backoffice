@@ -15,7 +15,7 @@
   };
 
   const state = {
-    events: J.buildEvents(now),
+    events: J.buildEvents(now, window.Logic.CLIENTS.map((client) => client.id)),
     from: 0,
     to: 0,
     presetId: null,
@@ -84,7 +84,7 @@
       <td>${escapeHtml(event.employee)}</td>
       <td>${J.formatDateTime(event.time)}</td>
       <td>${escapeHtml(nameOf(J.ACTIONS, event.action))}</td>
-      <td>${escapeHtml(nameOf(J.SOURCES, event.source))}</td>
+      <td>${event.clientId ? escapeHtml(event.clientId) : '—'}</td>
     </tr>`).join('');
   }
 
